@@ -40,12 +40,12 @@ const TONE_OPTIONS: { value: ToneOption; label: string }[] = [
   { value: "formal", label: "Formal" },
 ];
 
-interface ControlDefinition<T extends string> {
+interface ControlDefinition {
   label: string;
   help: string;
-  value: T;
-  onChange: (next: T) => void;
-  options: { value: T; label: string }[];
+  value: string;
+  onChange: (next: string) => void;
+  options: { value: string; label: string }[];
 }
 
 export function OptionsPanel() {
@@ -56,7 +56,7 @@ export function OptionsPanel() {
   const setModel = useOptionsStore((state) => state.setModel);
   const setTone = useOptionsStore((state) => state.setTone);
 
-  const controls: ControlDefinition<ResponseLength | ModelChoice | ToneOption>[] = [
+  const controls: ControlDefinition[] = [
     {
       label: "Response",
       help: "Controls how detailed the assistant should be.",
@@ -106,7 +106,7 @@ function InlineControl({
   control,
   isLast,
 }: {
-  control: ControlDefinition<string>;
+  control: ControlDefinition;
   isLast: boolean;
 }) {
   return (
@@ -150,7 +150,7 @@ function MobileOptions({
   controls,
   summary,
 }: {
-  controls: ControlDefinition<string>[];
+  controls: ControlDefinition[];
   summary: string;
 }) {
   return (
@@ -179,11 +179,7 @@ function MobileOptions({
   );
 }
 
-function StackedControl({
-  control,
-}: {
-  control: ControlDefinition<string>;
-}) {
+function StackedControl({ control }: { control: ControlDefinition }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-1">
