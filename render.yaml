@@ -1,0 +1,9 @@
+services:
+  - type: static_site
+    name: chat-ui
+    env: static
+    buildCommand: yarn build
+    staticPublishPath: dist
+    envVars:
+      - key: NODE_VERSION
+        value: 20
