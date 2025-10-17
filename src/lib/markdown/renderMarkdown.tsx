@@ -45,7 +45,7 @@ const CodeBlock = ({ inline, children, className, ...props }: CodeProps) => {
   return (
     <code
       className={cn(
-        "block max-h-80 overflow-auto rounded-2xl bg-bubble-assistant p-4 font-mono text-sm leading-relaxed text-foreground",
+        "block max-h-80 min-w-0 max-w-full overflow-auto rounded-2xl bg-bubble-assistant p-4 font-mono text-sm leading-relaxed text-foreground",
         className,
       )}
       {...props}
@@ -71,7 +71,7 @@ const components: Components = {
   pre: ({ className, ...props }) => (
     <pre
       className={cn(
-        "my-4 overflow-hidden rounded-2xl border border-chat-border/60 bg-bubble-assistant",
+        "my-4 w-full max-w-full overflow-x-auto rounded-2xl border border-chat-border/60 bg-bubble-assistant",
         className,
       )}
       {...props}
@@ -97,10 +97,7 @@ const components: Components = {
   ),
   p: ({ className, ...props }) => (
     <p
-      className={cn(
-        "my-2 text-[0.95rem] leading-6 text-foreground",
-        className,
-      )}
+      className={cn("my-2 text-[0.95rem] leading-6 text-foreground", className)}
       {...props}
     />
   ),

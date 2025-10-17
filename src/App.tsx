@@ -10,7 +10,7 @@ function App() {
       <div className="flex h-full w-full flex-col overflow-hidden bg-page text-foreground transition-colors">
         <div className="flex flex-1 min-h-0 flex-col gap-6 px-6 py-6 sm:px-10 sm:py-8 lg:px-16">
           <Header />
-          <main className="relative flex flex-1 min-h-0 flex-col overflow-hidden rounded-[2rem] border border-chat-border/70 bg-surface shadow-[0px_32px_120px_-60px_rgba(15,23,42,0.28)] dark:shadow-[0px_32px_120px_-60px_rgba(0,0,0,0.6)]">
+          <main className="min-w-xl self-center relative flex flex-1 min-h-0 flex-col overflow-hidden rounded-[2rem] border border-chat-border/70 bg-surface shadow-[0px_32px_120px_-60px_rgba(15,23,42,0.28)] dark:shadow-[0px_32px_120px_-60px_rgba(0,0,0,0.6)]">
             <div className="flex-1 min-h-0 overflow-hidden">
               <MessageList />
             </div>

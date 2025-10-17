@@ -11,9 +11,7 @@ interface ChatMessageProps {
   message: ChatMessageType;
 }
 
-function isAssistantMessage(
-  message: ChatMessageType,
-): message is AgentMessage {
+function isAssistantMessage(message: ChatMessageType): message is AgentMessage {
   return message.role === "assistant";
 }
 
@@ -40,7 +38,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
     >
       <div
         className={cn(
-          "flex max-w-[88%] items-end gap-3",
+          "flex max-w-md items-end gap-3 min-w-0",
           isAssistant ? "flex-row" : "flex-row-reverse",
         )}
       >
@@ -62,7 +60,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
         <div
           className={cn(
-            "flex flex-1 flex-col gap-2",
+            "flex flex-1 min-w-0 flex-col gap-2",
             isAssistant ? "items-start" : "items-end",
           )}
         >
@@ -76,11 +74,11 @@ export function ChatMessage({ message }: ChatMessageProps) {
           >
             {isAssistant ? (
               <MarkdownContent
-                className="prose-sm prose-neutral max-w-none dark:prose-invert prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0"
+                className="prose-sm prose-neutral max-w-none break-words dark:prose-invert prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0 w-full"
                 content={message.markdown}
               />
             ) : (
-              <p className="whitespace-pre-wrap text-foreground">
+              <p className="whitespace-pre-wrap break-words text-foreground">
                 {message.content}
               </p>
             )}

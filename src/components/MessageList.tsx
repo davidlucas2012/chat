@@ -34,7 +34,7 @@ export function MessageList() {
       aria-atomic="false"
       role="log"
     >
-      <div className="flex w-full flex-col gap-6">
+      <div className="flex max-w-full flex-col gap-6">
         {messages.length === 0 ? (
           <EmptyState />
         ) : (

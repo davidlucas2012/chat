@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { Paperclip, SendHorizonal } from "lucide-react";
 
@@ -10,6 +10,17 @@ import { useChatStore } from "@/store/chatStore";
 import type { AttachmentMeta } from "@/types";
 
 let attachmentCounter = 0;
+
+const PLACEHOLDER_PROMPTS = [
+  "Ask me anything about your roadmap.",
+  "Need help drafting your next update?",
+  "Curious how to pitch the idea? Just ask.",
+  "Want a quick summary or plan? I’m on it.",
+  "Looking for feedback on your concept? Let me know.",
+  "Need help with a specific section? Just point it out.",
+  "Want to brainstorm ideas? I'm here to help.",
+  "Looking for inspiration? Let's explore some options.",
+];
 
 function createAttachmentMeta(file: File): AttachmentMeta {
   attachmentCounter += 1;
@@ -29,11 +40,60 @@ function createAttachmentMeta(file: File): AttachmentMeta {
 export function Composer() {
   const sendMessage = useChatStore((state) => state.sendMessage);
   const [value, setValue] = useState("");
+  const [placeholder, setPlaceholder] = useState("");
   const [attachments, setAttachments] = useState<AttachmentMeta[]>([]);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const isSendDisabled = useMemo(() => value.trim().length === 0, [value]);
+  const promptIndexRef = useRef(0);
+  const characterIndexRef = useRef(0);
+  const isDeletingRef = useRef(false);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+
+    const typeNext = () => {
+      const prompt = PLACEHOLDER_PROMPTS[promptIndexRef.current];
+
+      if (!isDeletingRef.current) {
+        const nextLength = characterIndexRef.current + 1;
+        const nextText = prompt.slice(0, nextLength);
+        setPlaceholder(nextText);
+        characterIndexRef.current = nextLength;
+
+        if (nextLength === prompt.length) {
+          isDeletingRef.current = true;
+          timer = setTimeout(typeNext, 1500);
+          return;
+        }
+
+        timer = setTimeout(typeNext, 30);
+        return;
+      }
+
+      const nextLength = Math.max(characterIndexRef.current - 1, 0);
+      const nextText = prompt.slice(0, nextLength);
+      setPlaceholder(nextText);
+      characterIndexRef.current = nextLength;
+
+      if (nextLength === 0) {
+        isDeletingRef.current = false;
+        promptIndexRef.current =
+          (promptIndexRef.current + 1) % PLACEHOLDER_PROMPTS.length;
+        timer = setTimeout(typeNext, 400);
+        return;
+      }
+
+      timer = setTimeout(typeNext, 20);
+    };
+
+    timer = setTimeout(typeNext, 300);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, []);
 
   const handleSubmit = (event?: FormEvent<HTMLFormElement>) => {
     event?.preventDefault();
@@ -78,12 +138,8 @@ export function Composer() {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-3"
-      autoComplete="off"
-    >
-      <div className="flex items-center gap-3 rounded-2xl border border-chat-border/80 bg-surface px-4 py-3 shadow-[0px_14px_30px_-24px_rgba(15,23,42,0.35)] dark:shadow-[0px_18px_40px_-28px_rgba(0,0,0,0.6)]">
+    <form onSubmit={handleSubmit} className="space-y-3" autoComplete="off">
+      <div className="flex items-center gap-3 rounded-2xl border border-chat-border/80 bg-surface px-4 py-3 shadow-[0px_14px_30px_-24px_rgba(15,23,42,0.35)] transition-[border,box-shadow] focus-within:border-accent focus-within:shadow-[0px_24px_60px_-28px_rgba(56,189,248,0.45)] dark:focus-within:border-accent dark:focus-within:shadow-[0px_24px_60px_-28px_rgba(59,130,246,0.35)] dark:shadow-[0px_18px_40px_-28px_rgba(0,0,0,0.6)]">
         <div className="flex items-center gap-1">
           <input
             ref={fileInputRef}
@@ -105,14 +161,14 @@ export function Composer() {
           </Button>
         </div>
 
-        <div className="flex w-full flex-col">
+        <div className="flex w-full items-center">
           <label htmlFor="chat-input" className="sr-only">
             Message
           </label>
           <Textarea
             id="chat-input"
             value={value}
-            placeholder="Type a message…"
+            placeholder={placeholder}
             onChange={(event) => setValue(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.shiftKey) {
@@ -121,7 +177,7 @@ export function Composer() {
               }
             }}
             aria-describedby={error ? "chat-error" : undefined}
-            className="min-h-[52px] w-full resize-none rounded-xl border border-transparent bg-transparent px-3 py-3 text-[0.95rem] leading-6 text-foreground shadow-none transition-[border-color,box-shadow] focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/25 focus-visible:ring-offset-0"
+            className="min-h-[52px] w-full resize-none rounded-xl border border-transparent bg-transparent px-3 py-3 text-[0.95rem] leading-6 text-foreground shadow-none transition-[border-color,box-shadow] focus-visible:border-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
           />
         </div>
 

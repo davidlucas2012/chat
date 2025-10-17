@@ -13,8 +13,8 @@ export function EmptyState() {
       </motion.span>
       <motion.div
         className="mt-3 space-y-2 text-sm text-muted-foreground"
-        animate={{ y: [0, -6, 0] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        animate={{ y: [0, -5, 0] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
       >
         <p className="text-base font-medium text-foreground">Ask anything…</p>
         <p className="max-w-sm leading-relaxed">
