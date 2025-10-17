@@ -186,9 +186,7 @@ export function buildAttachmentLine(
 
   const extensions = Array.from(
     new Set(
-      attachments
-        .map((item) => item.extension.toLowerCase())
-        .filter(Boolean),
+      attachments.map((item) => item.extension.toLowerCase()).filter(Boolean),
     ),
   );
 
@@ -345,11 +343,7 @@ const quipBuilder: ReplyBuilder = ({ subject, options }) => {
   return `Consider ${subject.toLowerCase()} handled. ${closer}`;
 };
 
-const definitionBuilder: ReplyBuilder = ({
-  subject,
-  options,
-  transition,
-}) => {
+const definitionBuilder: ReplyBuilder = ({ subject, options, transition }) => {
   const detail =
     options.responseLength === "long"
       ? [
@@ -368,7 +362,7 @@ const definitionBuilder: ReplyBuilder = ({
 
 const qaBuilder: ReplyBuilder = ({
   subject,
-  originalInput,
+  originalInput: _originalInput,
   transition,
   options,
 }) => {

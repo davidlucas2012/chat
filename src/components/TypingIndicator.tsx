@@ -3,11 +3,19 @@ import { Sparkles } from "lucide-react";
 
 export function TypingIndicator() {
   const shouldReduceMotion = useReducedMotion();
+  const DOT_OFFSETS = [0, 1, 2] as const;
 
   return (
-    <div className="flex w-full justify-start" role="status" aria-live="assertive">
+    <div
+      className="flex w-full justify-start"
+      role="status"
+      aria-live="assertive"
+    >
       <div className="flex max-w-[88%] items-end gap-3">
-        <span className="flex size-9 items-center justify-center rounded-full border border-chat-border/70 bg-bubble-assistant text-accent shadow-sm" aria-hidden="true">
+        <span
+          className="flex size-9 items-center justify-center rounded-full border border-chat-border/70 bg-bubble-assistant text-accent shadow-sm"
+          aria-hidden="true"
+        >
           <Sparkles className="size-4" />
         </span>
         <div className="flex flex-col items-start gap-2">
@@ -18,10 +26,9 @@ export function TypingIndicator() {
               </span>
             ) : (
               <span className="flex items-center gap-1">
-                {[0, 1, 2].map((index) => (
+                {DOT_OFFSETS.map((offset) => (
                   <motion.span
-                    // eslint-disable-next-line react/no-array-index-key
-                    key={index}
+                    key={offset}
                     className="size-2.5 rounded-full bg-accent"
                     animate={{
                       opacity: [0.2, 1, 0.2],
@@ -31,7 +38,7 @@ export function TypingIndicator() {
                       repeat: Infinity,
                       duration: 1.2,
                       ease: "easeInOut",
-                      delay: index * 0.16,
+                      delay: offset * 0.16,
                     }}
                   />
                 ))}
