@@ -7,7 +7,6 @@ const baseOptions: AgentOptions = {
   responseLength: "medium",
   model: "gpt-prose",
   tone: "neutral",
-  focus: "overview",
 };
 
 function createOptions(overrides: Partial<AgentOptions> = {}): AgentOptions {
@@ -37,19 +36,19 @@ describe("generateAgentReply", () => {
       [],
     );
     expect(result.replyType).toBe("steps");
-    expect(result.content).toContain("1.");
+    expect(result.markdown).toContain("1.");
     expect(result.optionsSnapshot.responseLength).toBe("long");
   });
 
   it("returns definition style for what-is prompts", () => {
     const result = generateAgentReply(
       "What is a sprint retrospective?",
-      createOptions({ focus: "technical" }),
+      createOptions({ tone: "formal" }),
       [],
     );
     expect(result.replyType).toBe("definition");
-    expect(result.content).toContain("**Definition:**");
-    expect(result.content).toContain("**Quick example:**");
+    expect(result.markdown).toContain("**Definition:**");
+    expect(result.markdown).toContain("Quick example");
   });
 
   it("returns bullets when requesting lists", () => {
@@ -60,7 +59,7 @@ describe("generateAgentReply", () => {
     );
     expect(result.replyType).toBe("bullets");
     expect(
-      result.content.split("\n").some((line) => line.startsWith("-")),
+      result.markdown.split("\n").some((line) => line.trim().startsWith("-")),
     ).toBe(true);
   });
 
@@ -71,14 +70,14 @@ describe("generateAgentReply", () => {
       attachments,
     );
     expect(result.replyType).toBe("summary");
-    expect(result.content).toContain("> I noticed 2 attachments");
-    expect(result.content).toContain("Model gpt-mini");
+    expect(result.markdown).toContain("> Noted 2 attachments (pdf, png)");
+    expect(result.markdown).toContain("Model gpt-mini");
   });
 
   it("returns quip for short notes", () => {
     const result = generateAgentReply("Thanks!", baseOptions, []);
     expect(result.replyType).toBe("quip");
-    expect(result.content.toLowerCase()).toContain("handled");
+    expect(result.markdown.toLowerCase()).toContain("handled");
   });
 
   it("returns Q&A for question prompts and adds learning tip for tutor", () => {
@@ -88,7 +87,7 @@ describe("generateAgentReply", () => {
       [],
     );
     expect(result.replyType).toBe("qa");
-    expect(result.content).toContain("**Q:**");
-    expect(result.content).toContain("Learning tip");
+    expect(result.markdown).toContain("**Q:**");
+    expect(result.markdown).toContain("Learning tip");
   });
 });

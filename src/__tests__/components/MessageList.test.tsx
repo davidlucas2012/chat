@@ -75,9 +75,7 @@ describe("Message flow", () => {
     expect(screen.getByRole("status")).toBeInTheDocument();
     expect(scrollStub).toHaveBeenCalled();
 
-    expect(
-      await screen.findByText(/Follow these steps/, { exact: false }),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/Try this cadence/, { exact: false })).toBeInTheDocument();
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
 
     if (originalScroll) {

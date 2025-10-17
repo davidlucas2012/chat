@@ -23,6 +23,7 @@ export function ThemeToggle() {
             size="icon"
             aria-label="Toggle theme"
             onClick={toggleTheme}
+            className="size-10 rounded-xl border border-chat-border/70 bg-surface text-muted-foreground shadow-sm transition-colors hover:bg-bubble-assistant/70 hover:text-foreground dark:hover:bg-bubble-assistant/40 dark:hover:text-foreground"
           >
             <motion.span
               className="relative inline-flex size-5 items-center justify-center"

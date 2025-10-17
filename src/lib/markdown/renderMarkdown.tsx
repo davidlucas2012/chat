@@ -32,7 +32,7 @@ const CodeBlock = ({ inline, children, className, ...props }: CodeProps) => {
     return (
       <code
         className={cn(
-          "rounded-md bg-muted px-1.5 py-0.5 font-mono text-sm",
+          "rounded-lg bg-bubble-assistant px-1.5 py-0.5 font-mono text-sm text-foreground",
           className,
         )}
         {...props}
@@ -45,7 +45,7 @@ const CodeBlock = ({ inline, children, className, ...props }: CodeProps) => {
   return (
     <code
       className={cn(
-        "block max-h-80 overflow-auto rounded-xl bg-muted/50 p-4 font-mono text-sm leading-relaxed",
+        "block max-h-80 overflow-auto rounded-2xl bg-bubble-assistant p-4 font-mono text-sm leading-relaxed text-foreground",
         className,
       )}
       {...props}
@@ -71,7 +71,7 @@ const components: Components = {
   pre: ({ className, ...props }) => (
     <pre
       className={cn(
-        "my-4 overflow-hidden rounded-xl border border-border bg-muted/30",
+        "my-4 overflow-hidden rounded-2xl border border-chat-border/60 bg-bubble-assistant",
         className,
       )}
       {...props}
@@ -80,7 +80,7 @@ const components: Components = {
   ul: ({ className, ...props }) => (
     <ul
       className={cn(
-        "my-3 ml-6 list-disc space-y-2 text-sm leading-relaxed",
+        "my-3 ml-5 list-disc space-y-1.5 text-sm leading-relaxed",
         className,
       )}
       {...props}
@@ -89,7 +89,7 @@ const components: Components = {
   ol: ({ className, ...props }) => (
     <ol
       className={cn(
-        "my-3 ml-6 list-decimal space-y-2 text-sm leading-relaxed",
+        "my-3 ml-5 list-decimal space-y-1.5 text-sm leading-relaxed",
         className,
       )}
       {...props}
@@ -98,7 +98,7 @@ const components: Components = {
   p: ({ className, ...props }) => (
     <p
       className={cn(
-        "my-2 text-sm leading-relaxed text-foreground/90",
+        "my-2 text-[0.95rem] leading-6 text-foreground",
         className,
       )}
       {...props}
@@ -106,7 +106,7 @@ const components: Components = {
   ),
   li: ({ className, ...props }) => (
     <li
-      className={cn("text-sm leading-relaxed text-foreground/90", className)}
+      className={cn("text-[0.95rem] leading-6 text-foreground", className)}
       {...props}
     />
   ),

@@ -32,6 +32,10 @@ export function generateAgentReply(
 
   sections.push(fragments.body);
 
+  if (fragments.codeSample) {
+    sections.push(fragments.codeSample);
+  }
+
   if (fragments.attachmentNote) {
     sections.push(fragments.attachmentNote);
   }
@@ -48,11 +52,11 @@ export function generateAgentReply(
     sections.push(fragments.modelSignature);
   }
 
-  const content = sections.join("\n\n").trim();
+  const markdown = sections.join("\n\n").trim();
 
   return {
     role: "assistant",
-    content,
+    markdown,
     replyType,
     optionsSnapshot: { ...options },
   };

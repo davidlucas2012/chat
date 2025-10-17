@@ -3,7 +3,6 @@ export type ChatRole = "user" | "assistant";
 export type ResponseLength = "short" | "medium" | "long";
 export type ModelChoice = "gpt-mini" | "gpt-prose" | "gpt-tutor";
 export type ToneOption = "neutral" | "friendly" | "formal";
-export type FocusOption = "overview" | "technical" | "actionable";
 
 export type AgentReplyType =
   | "summary"
@@ -25,30 +24,28 @@ export interface AgentOptions {
   responseLength: ResponseLength;
   model: ModelChoice;
   tone: ToneOption;
-  focus: FocusOption;
 }
 
-export interface MessageBase {
-  content: string;
+export interface TimestampedMessage {
   attachments?: AttachmentMeta[];
-}
-
-export interface TimestampedMessage extends MessageBase {
   id: string;
   createdAt: number;
 }
 
 export interface UserMessage extends TimestampedMessage {
+  content: string;
   role: "user";
 }
 
-export interface GeneratedAgentMessage extends MessageBase {
+export interface GeneratedAgentMessage {
   role: "assistant";
+  markdown: string;
   replyType: AgentReplyType;
   optionsSnapshot: AgentOptions;
 }
 
 export interface AgentMessage extends GeneratedAgentMessage {
+  attachments?: AttachmentMeta[];
   id: string;
   createdAt: number;
 }

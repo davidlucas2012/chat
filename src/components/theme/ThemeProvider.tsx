@@ -48,6 +48,7 @@ function applyTheme(theme: Theme): void {
   }
 
   document.documentElement.classList.toggle("dark", theme === "dark");
+  document.documentElement.dataset.theme = theme;
 }
 
 export function ThemeProvider({ children }: PropsWithChildren) {

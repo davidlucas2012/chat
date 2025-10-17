@@ -3,7 +3,6 @@ import type {
   AgentOptions,
   AgentReplyType,
   AttachmentMeta,
-  FocusOption,
   ModelChoice,
   ResponseLength,
   ToneOption,
@@ -18,45 +17,39 @@ const FRIENDLY_GREETINGS = [
 const FRIENDLY_CLOSINGS = [
   "Let me know what else you need.",
   "I’m here if you want to dig deeper.",
-  "Feel free to ask for more detail anytime.",
+  "Happy to keep brainstorming whenever you are.",
 ];
 
 const FORMAL_GREETINGS = ["Greetings.", "Hello.", "Good day."];
 
 const FORMAL_CLOSINGS = [
-  "Please advise if further detail is required.",
-  "Do not hesitate to follow up for clarification.",
-  "I remain available for any additional questions.",
+  "Please advise if further clarification is required.",
+  "Do not hesitate to follow up for additional detail.",
+  "I remain available for any subsequent questions.",
 ];
 
-const NEUTRAL_TRANSITIONS: Record<ModelChoice, string> = {
-  "gpt-mini": "Here is the concise breakdown:",
-  "gpt-prose": "Here’s a cohesive walkthrough:",
-  "gpt-tutor": "Let’s unpack this together:",
+const MODEL_TRANSITIONS: Record<ModelChoice, string> = {
+  "gpt-mini": "Here’s the condensed view:",
+  "gpt-prose": "Here’s the flow of the idea:",
+  "gpt-tutor": "Let’s unpack it together:",
 };
 
-const MODEL_SIGNOFF: Record<ModelChoice, string> = {
-  "gpt-mini": "_Model gpt-mini prioritises succinct, direct guidance._",
+const MODEL_SIGNATURE: Record<ModelChoice, string> = {
+  "gpt-mini": "_Model gpt-mini keeps things crisp and direct._",
   "gpt-prose": "_Model gpt-prose leans into smooth narrative phrasing._",
-  "gpt-tutor": "_Model gpt-tutor highlights learning cues for you._",
+  "gpt-tutor": "_Model gpt-tutor adds guidance cues for learning._",
 };
 
 const LEARNING_TIPS = [
-  "Learning tip: try summarising the answer in your own words to refine understanding.",
-  "Learning tip: teach this concept to someone else—it cements the knowledge.",
-  "Learning tip: jot the key steps on a sticky note for quick recall later.",
+  "Learning tip: summarise the answer in your own words—rewriting reinforces retention.",
+  "Learning tip: teach the concept to someone else; explaining it out loud is a quick mastery check.",
+  "Learning tip: note the key steps on a sticky card so you can revisit them at a glance.",
 ];
 
-const SHORT_RESP_LIMITS: Record<ResponseLength, number> = {
-  short: 2,
-  medium: 4,
-  long: 6,
-};
-
-const STEP_LIMITS: Record<ResponseLength, number> = {
-  short: 3,
-  medium: 5,
-  long: 7,
+const SUMMARY_SENTENCE_COUNT: Record<ResponseLength, number> = {
+  short: 1,
+  medium: 2,
+  long: 3,
 };
 
 const BULLET_LIMITS: Record<ResponseLength, number> = {
@@ -65,9 +58,40 @@ const BULLET_LIMITS: Record<ResponseLength, number> = {
   long: 7,
 };
 
+const STEP_LIMITS: Record<ResponseLength, number> = {
+  short: 3,
+  medium: 5,
+  long: 7,
+};
+
+const CODE_SNIPPETS = [
+  {
+    language: "css",
+    body: `.chat-shell {
+  padding: 2rem;
+  max-width: 720px;
+  border-radius: 1.75rem;
+}`,
+  },
+  {
+    language: "tsx",
+    body: `const { theme, toggleTheme } = useTheme();
+
+useEffect(() => {
+  document.documentElement.dataset.theme = theme;
+}, [theme]);`,
+  },
+  {
+    language: "typescript",
+    body: `function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}`,
+  },
+];
+
 function pickVariant(
   options: AgentOptions,
-  source: string[],
+  source: readonly string[],
   seed: string,
 ): string {
   const index = deterministicVariant(
@@ -89,15 +113,17 @@ function isImperativeStart(text: string): boolean {
     "create",
     "design",
     "draft",
-    "write",
+    "implement",
+    "make",
     "plan",
-    "explain",
+    "prepare",
+    "write",
   ].includes(firstWord);
 }
 
 export function detectReplyType(
   text: string,
-  options: AgentOptions,
+  _options: AgentOptions,
 ): AgentReplyType {
   const lowered = normalise(text);
 
@@ -105,12 +131,7 @@ export function detectReplyType(
     return "summary";
   }
 
-  if (
-    lowered.startsWith("what is") ||
-    lowered.includes("define ") ||
-    lowered.includes("definition") ||
-    options.focus === "technical"
-  ) {
+  if (lowered.startsWith("what is") || lowered.includes("definition")) {
     return "definition";
   }
 
@@ -119,10 +140,13 @@ export function detectReplyType(
     lowered.startsWith("how do i") ||
     lowered.includes(" step ") ||
     lowered.includes("guide") ||
-    options.focus === "actionable" ||
     isImperativeStart(lowered)
   ) {
     return "steps";
+  }
+
+  if (lowered.includes("list") || lowered.includes("ideas")) {
+    return "bullets";
   }
 
   if (lowered.includes("?")) {
@@ -133,10 +157,6 @@ export function detectReplyType(
     return "quip";
   }
 
-  if (lowered.includes("list") || lowered.includes("ideas")) {
-    return "bullets";
-  }
-
   return "summary";
 }
 
@@ -145,28 +165,16 @@ export function computeTypingDelay(
   options: AgentOptions,
   attachments: AttachmentMeta[],
 ): number {
-  const lengthFactor = Math.min(text.length * 7, 300);
+  const lengthFactor = Math.min(text.length * 6, 280);
   const responseAdjustment =
     options.responseLength === "long"
-      ? 180
+      ? 200
       : options.responseLength === "short"
-        ? -40
+        ? -60
         : 80;
-  const attachmentAdjustment = attachments.length * 35;
-  const focusAdjustment =
-    options.focus === "technical"
-      ? 40
-      : options.focus === "actionable"
-        ? 60
-        : 0;
-
-  const total =
-    320 +
-    lengthFactor +
-    responseAdjustment +
-    attachmentAdjustment +
-    focusAdjustment;
-  return Math.max(300, Math.min(800, total));
+  const attachmentAdjustment = attachments.length * 45;
+  const total = 360 + lengthFactor + responseAdjustment + attachmentAdjustment;
+  return Math.max(320, Math.min(total, 860));
 }
 
 export function buildAttachmentLine(
@@ -179,14 +187,14 @@ export function buildAttachmentLine(
   const extensions = Array.from(
     new Set(
       attachments
-        .map((attachment) => attachment.extension.toLowerCase())
+        .map((item) => item.extension.toLowerCase())
         .filter(Boolean),
     ),
-  ).join(", ");
+  );
 
   const noun = attachments.length === 1 ? "attachment" : "attachments";
-  const suffix = extensions ? ` (${extensions})` : "";
-  return `> I noticed ${attachments.length} ${noun}${suffix}. I'll keep them in mind.`;
+  const suffix = extensions.length > 0 ? ` (${extensions.join(", ")})` : "";
+  return `> Noted ${attachments.length} ${noun}${suffix}. I’ll weave them into the reply.`;
 }
 
 export function extractSubject(text: string): string {
@@ -200,7 +208,12 @@ export function extractSubject(text: string): string {
     "",
   );
 
-  return withoutLead.charAt(0).toUpperCase() + withoutLead.slice(1);
+  const subject = withoutLead.trim();
+  if (!subject) {
+    return "your request";
+  }
+
+  return subject.charAt(0).toUpperCase() + subject.slice(1);
 }
 
 function getGreeting(
@@ -231,39 +244,6 @@ function getClosing(
   return null;
 }
 
-function buildFocusLine(
-  focus: FocusOption,
-  responseLength: ResponseLength,
-): string | null {
-  const emphasis = responseLength === "long" ? "Detailed focus" : "Focus";
-  switch (focus) {
-    case "overview":
-      return `${emphasis}: a clear overview you can skim quickly.`;
-    case "technical":
-      return `${emphasis}: technical nuance so implementation is safer.`;
-    case "actionable":
-      return `${emphasis}: concrete moves you can take next.`;
-    default:
-      return null;
-  }
-}
-
-function applyModelVoice(model: ModelChoice, body: string): string {
-  if (model === "gpt-mini") {
-    return body
-      .split("\n")
-      .map((line) => line.replace(/\b(and|that)\b/gi, "").trim())
-      .join("\n")
-      .replace(/\n{3,}/g, "\n\n");
-  }
-
-  if (model === "gpt-prose") {
-    return body.replace(/\n\n/g, "\n\n");
-  }
-
-  return body;
-}
-
 function maybeAddLearningTip(
   model: ModelChoice,
   options: AgentOptions,
@@ -276,6 +256,145 @@ function maybeAddLearningTip(
   return pickVariant(options, LEARNING_TIPS, `tip-${seed}`);
 }
 
+function maybeAddCodeSnippet(
+  originalInput: string,
+  subject: string,
+  options: AgentOptions,
+): string | null {
+  if (
+    !/(code|component|snippet|toggle|example|implement|css|typescript|react)/i.test(
+      originalInput,
+    )
+  ) {
+    return null;
+  }
+
+  const index = deterministicVariant(
+    `${subject}-${originalInput}-${options.model}`,
+    CODE_SNIPPETS.length,
+  );
+  const snippet = CODE_SNIPPETS[index];
+  return `\`\`\`${snippet.language}\n${snippet.body}\n\`\`\``;
+}
+
+interface ReplyContext {
+  subject: string;
+  originalInput: string;
+  options: AgentOptions;
+  transition: string;
+}
+
+type ReplyBuilder = (context: ReplyContext) => string;
+
+const summaryBuilder: ReplyBuilder = ({ subject, options, transition }) => {
+  const sentenceCount = SUMMARY_SENTENCE_COUNT[options.responseLength];
+  const sentences = [
+    `${transition} ${subject} boils down to a few focused moves.`,
+    "Keep the scope tight so each deliverable feels intentional.",
+    "Share a quick recap at the end so stakeholders never guess what's next.",
+  ].slice(0, sentenceCount);
+
+  const highlights =
+    options.responseLength === "short"
+      ? []
+      : [
+          `- Momentum: pick one measurable signal to watch as ${subject.toLowerCase()} takes shape.`,
+          "- Risks: note blockers early and pair each with a lightweight fallback.",
+        ];
+
+  return [`**Overview: ${subject}**`, ...sentences, ...highlights].join("\n\n");
+};
+
+const bulletBuilder: ReplyBuilder = ({ subject, options, transition }) => {
+  const limit = BULLET_LIMITS[options.responseLength];
+  const bullets = [
+    `- Clarify what ${subject.toLowerCase()} should achieve and who benefits.`,
+    "- Capture constraints—time, tooling, review cycles.",
+    "- Draft a simple narrative so the team aligns on tone.",
+    "- Prep a lightweight artifact to track decisions.",
+    "- Schedule a retro checkpoint to gather feedback quickly.",
+    "- Pair each action with an owner and a calm deadline.",
+    "- Surface open questions so they're resolved in daylight.",
+  ].slice(0, limit);
+
+  return [`${transition} Here’s a punchy list:`, ...bullets].join("\n");
+};
+
+const stepsBuilder: ReplyBuilder = ({ subject, options, transition }) => {
+  const limit = STEP_LIMITS[options.responseLength];
+  const steps = [
+    `Map the intent of ${subject} and note any success metrics.`,
+    "Outline key milestones—draft, review, launch.",
+    "Assign clear owners and share expectations openly.",
+    "Prototype or test early to de-risk the approach.",
+    "Document learnings and fold them back into the plan.",
+    "Close with a recap and next steps for the team.",
+    "Capture a short retrospective so it’s easy to iterate.",
+  ]
+    .slice(0, limit)
+    .map((step, index) => `${index + 1}. ${step}`);
+
+  return [`${transition} Try this cadence:`, ...steps].join("\n");
+};
+
+const quipBuilder: ReplyBuilder = ({ subject, options }) => {
+  const closer =
+    options.model === "gpt-mini"
+      ? "All tidied up."
+      : "Momentum stays high on my end.";
+  return `Consider ${subject.toLowerCase()} handled. ${closer}`;
+};
+
+const definitionBuilder: ReplyBuilder = ({
+  subject,
+  options,
+  transition,
+}) => {
+  const detail =
+    options.responseLength === "long"
+      ? [
+          "- When it shines: clarifies intent and reduces thrash.",
+          "- When to adapt: if the audience or channels change midstream.",
+        ]
+      : [];
+
+  return [
+    `${transition} Let’s pin down what ${subject.toLowerCase()} means.`,
+    `**Definition:** ${subject} captures the principles that keep your execution consistent, calm, and explainable.`,
+    "**Quick example:** pair planning decisions with a single source of truth so everyone reads the same signals.",
+    ...detail,
+  ].join("\n\n");
+};
+
+const qaBuilder: ReplyBuilder = ({
+  subject,
+  originalInput,
+  transition,
+  options,
+}) => {
+  const extras =
+    options.responseLength === "long"
+      ? [
+          "- Follow-up: revisit the plan after the first implementation and capture notes.",
+          "- Signal: choose one metric that indicates momentum is healthy.",
+        ]
+      : [];
+
+  return [
+    `${transition} ${subject} hinges on aligning expectations, scoping the effort, and sharing results without drama.`,
+    ...extras,
+  ].join("\n\n");
+};
+
+const replyBuilders: Record<AgentReplyType, ReplyBuilder> = {
+  summary: summaryBuilder,
+  bullets: bulletBuilder,
+  steps: stepsBuilder,
+  quip: quipBuilder,
+  definition: definitionBuilder,
+  qa: qaBuilder,
+};
+
 export interface ReplyFragments {
   header?: string | null;
   body: string;
@@ -283,6 +402,7 @@ export interface ReplyFragments {
   attachmentNote?: string | null;
   modelSignature: string;
   learningTip?: string | null;
+  codeSample?: string | null;
 }
 
 export function composeReply(
@@ -295,196 +415,35 @@ export function composeReply(
   const seed = `${replyType}-${subject}-${originalInput.length}`;
   const greeting = getGreeting(options.tone, options, seed);
   const closing = getClosing(options.tone, options, seed);
-  const transition = NEUTRAL_TRANSITIONS[options.model];
+  const transition = MODEL_TRANSITIONS[options.model];
   const attachmentNote = buildAttachmentLine(attachments);
-  const focusLine = buildFocusLine(options.focus, options.responseLength);
-
-  const builders: Record<AgentReplyType, () => string> = {
-    summary: () => buildSummary(subject, options, transition, focusLine),
-    bullets: () => buildBullets(subject, options, transition, focusLine),
-    steps: () => buildSteps(subject, options, transition, focusLine),
-    quip: () => buildQuip(subject, options),
-    definition: () => buildDefinition(subject, options, transition, focusLine),
-    qa: () => buildQA(subject, originalInput, options, transition, focusLine),
-  };
-
-  const rawBody = builders[replyType]();
-  const withVoice = applyModelVoice(options.model, rawBody);
-  const modelSignature = MODEL_SIGNOFF[options.model];
+  const builder = replyBuilders[replyType];
+  const rawBody = builder({ subject, originalInput, options, transition });
+  const codeSample = maybeAddCodeSnippet(originalInput, subject, options);
   const learningTip = maybeAddLearningTip(options.model, options, seed);
+
+  const body = applyModelVoice(options.model, rawBody);
 
   return {
     header: greeting,
-    body: withVoice,
+    body,
     footer: closing,
     attachmentNote,
-    modelSignature,
+    modelSignature: MODEL_SIGNATURE[options.model],
     learningTip,
+    codeSample,
   };
 }
 
-function buildSummary(
-  subject: string,
-  options: AgentOptions,
-  transition: string,
-  focusLine: string | null,
-): string {
-  const detail = SHORT_RESP_LIMITS[options.responseLength];
-  const highlight =
-    options.responseLength === "long" ? "Key takeaways" : "Highlights";
-  const segments = [
-    `**${highlight} on ${subject}:**`,
-    `${transition} ${subject} boils down to ${detail} essentials you can act on swiftly.`,
-  ];
-
-  if (focusLine) {
-    segments.push(focusLine);
+function applyModelVoice(model: ModelChoice, body: string): string {
+  if (model === "gpt-mini") {
+    const blocks = body.split("\n\n");
+    return blocks.slice(0, 3).join("\n\n");
   }
 
-  if (options.responseLength !== "short") {
-    segments.push(
-      `• Impact: expect measurable outcomes after ${options.responseLength === "long" ? "a structured follow-through" : "a focused session"}.`,
-      `• Watch-outs: track progress at least once every ${options.responseLength === "long" ? "few days" : "week"}.`,
-    );
+  if (model === "gpt-tutor") {
+    return body.replace(/\.($|\s)/g, ". ");
   }
 
-  return segments.join("\n\n");
-}
-
-function buildBullets(
-  subject: string,
-  options: AgentOptions,
-  transition: string,
-  focusLine: string | null,
-): string {
-  const limit = BULLET_LIMITS[options.responseLength];
-  const bullets = [
-    `- Core idea: clarify the objective of ${subject}.`,
-    "- Context: note the audience and constraints.",
-    "- Signals: establish what success should look like.",
-    "- Risks: list known blockers and mitigation tactics.",
-    "- Next checkpoint: schedule a review to adjust course.",
-    "- Resource hint: prep a quick reference doc.",
-    "- Reflection: capture lessons learned for reuse.",
-  ].slice(0, limit);
-
-  const sections = [
-    `${transition} Here’s a quick-hit list for ${subject}:`,
-    ...bullets,
-  ];
-
-  if (focusLine) {
-    sections.splice(1, 0, `- ${focusLine}`);
-  }
-
-  return sections.join("\n");
-}
-
-function buildSteps(
-  subject: string,
-  options: AgentOptions,
-  transition: string,
-  focusLine: string | null,
-): string {
-  const limit = STEP_LIMITS[options.responseLength];
-  const steps = [
-    `Gather context about ${subject} and confirm the goal.`,
-    "Break the work into manageable milestones.",
-    "Assign ownership and deadlines for each milestone.",
-    "Validate early progress with a quick review.",
-    "Document insights in a lightweight tracker.",
-    "Plan a retrospective to capture improvements.",
-    "Share the outcome with stakeholders succinctly.",
-  ].slice(0, limit);
-
-  const numbered = steps.map((step, index) => `${index + 1}. ${step}`);
-
-  const sections = [
-    `${transition} Follow these steps for ${subject}:`,
-    ...numbered,
-  ];
-
-  if (focusLine) {
-    sections.splice(1, 0, `_${focusLine}_`);
-  }
-
-  return sections.join("\n");
-}
-
-function buildQuip(subject: string, options: AgentOptions): string {
-  const flavour =
-    options.tone === "friendly"
-      ? `Looks like ${subject} just asked for a high-five.`
-      : `Consider ${subject} handled with minimal fuss.`;
-  return `${flavour} ${options.model === "gpt-mini" ? "Done and dusted." : "All set on my end."}`;
-}
-
-function buildDefinition(
-  subject: string,
-  options: AgentOptions,
-  transition: string,
-  focusLine: string | null,
-): string {
-  const exampleIntro =
-    options.responseLength === "long"
-      ? "Illustrative scenario"
-      : "Quick example";
-
-  const lines = [
-    `${transition} Let’s pin down ${subject}.`,
-    `**Definition:** ${subject} refers to the essential mechanics that keep your process reliable and predictable.`,
-    `**${exampleIntro}:** imagine applying it during a sprint review—everyone knows the checklist, the signals, and the standards.`,
-  ];
-
-  if (focusLine) {
-    lines.push(`**Focus note:** ${focusLine}`);
-  }
-
-  if (options.responseLength === "long") {
-    lines.push(
-      "- When to use it: to align new collaborators fast.",
-      "- When to adapt: if constraints change mid-project.",
-    );
-  }
-
-  return lines.join("\n\n");
-}
-
-function buildQA(
-  subject: string,
-  originalInput: string,
-  options: AgentOptions,
-  transition: string,
-  focusLine: string | null,
-): string {
-  const answerIntro =
-    options.responseLength === "short"
-      ? "Answer"
-      : options.responseLength === "long"
-        ? "Expanded answer"
-        : "Detailed answer";
-
-  const lines = [
-    `**Q:** ${originalInput.trim()}`,
-    `**A:** ${transition} ${subject} depends on aligning intent, constraints, and measurement in one place.`,
-  ];
-
-  if (focusLine) {
-    lines.push(`**Focus reminder:** ${focusLine}`);
-  }
-
-  if (options.responseLength !== "short") {
-    lines.push(
-      `**${answerIntro}:** carve out time to draft, review, and iterate with clear checkpoints.`,
-    );
-  }
-
-  if (options.responseLength === "long") {
-    lines.push(
-      "- Follow-up: collect feedback after first implementation.",
-      "- Signal: stick with a single metric to gauge success.",
-    );
-  }
-
-  return lines.join("\n\n");
+  return body;
 }

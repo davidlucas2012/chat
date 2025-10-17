@@ -29,11 +29,12 @@ export function MessageList() {
   return (
     <div
       ref={containerRef}
-      className="h-full w-full overflow-y-auto pr-1"
+      className="h-full min-h-0 w-full overflow-y-auto px-5 pb-10 pt-8"
       aria-live="polite"
       aria-atomic="false"
+      role="log"
     >
-      <div className="flex w-full flex-col gap-6 pb-16 pt-4">
+      <div className="flex w-full flex-col gap-6">
         {messages.length === 0 ? (
           <EmptyState />
         ) : (

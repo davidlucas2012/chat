@@ -3,7 +3,6 @@ import { persist } from "zustand/middleware";
 
 import type {
   AgentOptions,
-  FocusOption,
   ModelChoice,
   ResponseLength,
   ToneOption,
@@ -13,7 +12,6 @@ interface OptionsState extends AgentOptions {
   setResponseLength: (length: ResponseLength) => void;
   setModel: (model: ModelChoice) => void;
   setTone: (tone: ToneOption) => void;
-  setFocus: (focus: FocusOption) => void;
   reset: () => void;
 }
 
@@ -21,7 +19,6 @@ const DEFAULT_OPTIONS: AgentOptions = {
   responseLength: "medium",
   model: "gpt-prose",
   tone: "neutral",
-  focus: "overview",
 };
 
 export const useOptionsStore = create<OptionsState>()(
@@ -31,18 +28,31 @@ export const useOptionsStore = create<OptionsState>()(
       setResponseLength: (responseLength) => set({ responseLength }),
       setModel: (model) => set({ model }),
       setTone: (tone) => set({ tone }),
-      setFocus: (focus) => set({ focus }),
       reset: () => set(DEFAULT_OPTIONS),
     }),
     {
       name: "chat-options",
-      version: 1,
+      version: 2,
       partialize: (state) => ({
         responseLength: state.responseLength,
         model: state.model,
         tone: state.tone,
-        focus: state.focus,
       }),
+      migrate: (state) => {
+        if (!state || typeof state !== "object") {
+          return DEFAULT_OPTIONS;
+        }
+        const {
+          responseLength = DEFAULT_OPTIONS.responseLength,
+          model = DEFAULT_OPTIONS.model,
+          tone = DEFAULT_OPTIONS.tone,
+        } = state as Partial<AgentOptions>;
+        return {
+          responseLength,
+          model,
+          tone,
+        };
+      },
     },
   ),
 );
@@ -51,5 +61,4 @@ export const selectAgentOptions = (state: OptionsState): AgentOptions => ({
   responseLength: state.responseLength,
   model: state.model,
   tone: state.tone,
-  focus: state.focus,
 });

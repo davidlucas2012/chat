@@ -1,6 +1,6 @@
 # Simple AI Chat
 
-Deterministic single-page AI chat demo built with Vite, React 19, TypeScript, TailwindCSS, shadcn/ui, Zustand, and Framer Motion. The assistant runs locally with no network calls and adapts its voice, depth, and structure using hardcoded rules.
+Minimalist, deterministic AI chat experience built with Vite, React 19, TypeScript, TailwindCSS, shadcn/ui, Zustand, and Framer Motion. The assistant runs locally with no network calls and adapts its voice, depth, and structure using deterministic rules.
 
 ## Quick start
 
@@ -14,34 +14,33 @@ yarn test
 
 ## Features
 
-- Card-based chat surface with animated message reveal, markdown rendering, avatars, timestamps, and accessible auto-scroll.
-- Deterministic typing indicator (300–800 ms) and agent replies from a pure `generateAgentReply` function.
-- Composer with multiline textarea, Enter-to-send, attachment chips (max 5 files, 10 MB each), inline validation errors, and sticky positioning.
-- Options panel controlling **Response Length**, **Model Voice**, **Tone**, and **Focus**—each altering the reply template, cadence, and supplemental notes.
-- Light/dark theming with instant toggle, reduced-motion accommodations, and tasteful Framer Motion micro-interactions.
-- Unit tests for agent reply routing and attachment validation plus an integration test covering send → typing → reply flow and auto-scroll.
+- Centered chat canvas (`max-w-[720px]`) with soft-edged shells, custom light/dark palettes, animated message reveals, and auto-scroll that respects reduced motion.
+- Assistant/user bubbles styled to match the reference mock: avatars, timestamps, Markdown (lists, inline/blocked code), and attachment chips.
+- Sticky composer with multiline textarea, Enter-to-send, Shift+Enter for line breaks, paperclip uploads (max 5 files, 10 MB), inline validation, and deterministic typing indicator.
+- Inline options row (desktop) / popover (mobile) that controls **Response length**, **Model**, and **Tone**; each option feeds the reply generator and updates the row text (`Response: Medium • Model: GPT Prose • Tone: Neutral`).
+- Theme toggle with persisted preference, data-theme driven tokens, and Framer Motion micro-interactions (message fade/slide, floating empty state, typing dots).
+- Tests covering reply routing, attachments validation, and the send → typing → reply flow including auto-scroll behaviour.
 
 ## Options reference
 
-- **Response Length** – Short trims detail, Long expands bullets/steps and adds reminders.
-- **Model Voice** – `gpt-mini` terse & direct, `gpt-prose` adds smooth transitions, `gpt-tutor` appends a tailored learning tip.
-- **Tone** – Friendly greets/closes warmly, Formal stays precise, Neutral keeps defaults.
-- **Focus** – Overview summarises outcomes, Technical adds nuance, Actionable emphasises next steps and structured guidance.
+- **Response Length** – Short trims detail, Long expands steps/bullets and adds follow-ups.
+- **Model Voice** – `gpt-mini` keeps answers brisk, `gpt-prose` leans narrative, `gpt-tutor` appends deterministic learning tips.
+- **Tone** – Neutral is direct, Friendly greets/closes warmly, Formal stays precise.
 
 Attachments are acknowledged inline (with type hints) and influence the assistant’s opening context.
 
 ## Architecture notes
 
-- `src/lib/agent` encapsulates deterministic reply rules and Markdown generation helpers.
-- `src/store` uses tiny Zustand stores: one for chat flow (including simulated typing delay) and one persisted options store.
-- `src/components` splits UI primitives (`ui/`), chat surfaces, and theme utilities for clarity.
+- `src/lib/agent` encapsulates deterministic reply rules and Markdown helpers that output ready-to-render Markdown strings.
+- `src/store` uses tiny Zustand stores: one for chat flow (with simulated typing delay) and one persisted options store.
+- `src/components` holds chat surfaces, theme utilities, and shadcn/ui primitives, mirroring the project structure described in the spec.
 - `MarkdownContent` uses `react-markdown`, `remark-gfm`, and a sanitised rehype pipeline with syntax highlighting-friendly allowances.
 - Tests live in `src/__tests__`, driven by Vitest + React Testing Library.
 
 ## Known trade-offs / TODOs
 
 - Reply rules are intentionally opinionated; expanding the DSL would improve maintainability if more styles are needed.
-- No persistence for chat history yet—refreshing clears messages (options persist via localStorage).
+- No persistence for chat history yet—refreshing clears messages (options persist via `localStorage`).
 - Syntax highlighting relies on the default `rehype-highlight` theme; bespoke theming could better match the UI palette.
 
 ## Implementation notes

@@ -1,98 +1,108 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { Bot, User } from "lucide-react";
+import { Sparkles, UserRound } from "lucide-react";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { FileChips } from "@/components/FileChips";
 import { MarkdownContent } from "@/lib/markdown/renderMarkdown";
 import { formatTimestamp } from "@/lib/time/formatTimestamp";
+import { cn } from "@/lib/utils";
 import type { AgentMessage, ChatMessage as ChatMessageType } from "@/types";
 
 interface ChatMessageProps {
   message: ChatMessageType;
 }
 
-function isAgentMessage(message: ChatMessageType): message is AgentMessage {
+function isAssistantMessage(
+  message: ChatMessageType,
+): message is AgentMessage {
   return message.role === "assistant";
 }
 
 export function ChatMessage({ message }: ChatMessageProps) {
-  const isAssistant = message.role === "assistant";
-  const assistantMessage = isAgentMessage(message) ? message : null;
   const shouldReduceMotion = useReducedMotion();
+  const isAssistant = isAssistantMessage(message);
   const timestamp = formatTimestamp(message.createdAt);
 
   const animationProps = shouldReduceMotion
     ? {}
     : {
-        initial: { opacity: 0, y: 12 },
+        initial: { opacity: 0, y: 16 },
         animate: { opacity: 1, y: 0 },
-        transition: { duration: 0.2 },
+        transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] },
       };
 
   return (
     <motion.div
-      className="flex w-full gap-3"
-      data-role={message.role}
+      className={cn(
+        "flex w-full",
+        isAssistant ? "justify-start" : "justify-end",
+      )}
       {...animationProps}
     >
-      <Avatar className="mt-1 size-9">
-        <AvatarFallback className="bg-muted text-muted-foreground">
-          {isAssistant ? (
-            <Bot className="size-4" />
-          ) : (
-            <User className="size-4" />
-          )}
-        </AvatarFallback>
-      </Avatar>
-      <div className="flex flex-1 flex-col gap-2">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="font-medium">
-            {isAssistant ? "Assistant" : "You"}
-          </span>
-          <span aria-hidden="true">•</span>
-          <span>{timestamp}</span>
-          {assistantMessage ? (
-            <AssistantMeta message={assistantMessage} />
-          ) : null}
-        </div>
-        <div
-          className={`max-w-[70%] rounded-2xl border px-4 py-3 text-sm leading-relaxed ${
+      <div
+        className={cn(
+          "flex max-w-[88%] items-end gap-3",
+          isAssistant ? "flex-row" : "flex-row-reverse",
+        )}
+      >
+        <span
+          className={cn(
+            "flex size-9 items-center justify-center rounded-full border border-chat-border/70 shadow-sm",
             isAssistant
-              ? "bg-muted/40 text-foreground"
-              : "ml-auto bg-primary text-primary-foreground"
-          }`}
+              ? "bg-bubble-assistant text-accent"
+              : "bg-bubble-user text-accent",
+          )}
+          aria-hidden="true"
         >
           {isAssistant ? (
-            <MarkdownContent
-              className="prose-sm prose-headings:mt-0 prose-headings:mb-2 prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0 dark:prose-invert"
-              content={message.content}
-            />
+            <Sparkles className="size-4" />
           ) : (
-            <p className="whitespace-pre-wrap">{message.content}</p>
+            <UserRound className="size-4" />
           )}
-        </div>
-        {message.attachments && message.attachments.length > 0 ? (
+        </span>
+
+        <div
+          className={cn(
+            "flex flex-1 flex-col gap-2",
+            isAssistant ? "items-start" : "items-end",
+          )}
+        >
           <div
-            className={`flex ${
-              isAssistant ? "ml-12 justify-start" : "ml-auto justify-end"
-            }`}
+            className={cn(
+              "w-full rounded-2xl border border-chat-border/70 px-4 py-3 text-[0.9375rem] leading-6 shadow-sm",
+              isAssistant
+                ? "bg-bubble-assistant text-foreground"
+                : "bg-bubble-user text-foreground dark:text-foreground",
+            )}
           >
-            <FileChips attachments={message.attachments} />
+            {isAssistant ? (
+              <MarkdownContent
+                className="prose-sm prose-neutral max-w-none dark:prose-invert prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0"
+                content={message.markdown}
+              />
+            ) : (
+              <p className="whitespace-pre-wrap text-foreground">
+                {message.content}
+              </p>
+            )}
           </div>
-        ) : null}
+
+          {message.attachments && message.attachments.length > 0 ? (
+            <div
+              className={cn(
+                "w-full",
+                isAssistant ? "justify-start" : "justify-end",
+                "flex",
+              )}
+            >
+              <FileChips attachments={message.attachments} />
+            </div>
+          ) : null}
+
+          <span className="text-[0.75rem] font-medium tracking-tight text-timestamp">
+            {timestamp}
+          </span>
+        </div>
       </div>
     </motion.div>
-  );
-}
-
-function AssistantMeta({ message }: { message: AgentMessage }) {
-  return (
-    <div className="flex items-center gap-2">
-      <Badge variant="muted" className="capitalize">
-        {message.replyType.replace("-", " ")}
-      </Badge>
-      <Badge variant="outline">{message.optionsSnapshot.model}</Badge>
-    </div>
   );
 }

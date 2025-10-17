@@ -1,41 +1,24 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Composer } from "@/components/Composer";
+import { Header } from "@/components/Header";
 import { MessageList } from "@/components/MessageList";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { OptionsPanel } from "@/components/OptionsPanel";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
 function App() {
   return (
     <ThemeProvider>
-      <div className="min-h-dvh bg-background text-foreground">
-        <div className="container flex min-h-dvh flex-col gap-6 py-10">
-          <header className="flex items-center justify-between rounded-2xl border bg-card/80 px-6 py-4 shadow-sm backdrop-blur">
-            <div>
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                Simple AI Chat Interface
-              </p>
-              <h1 className="text-2xl font-semibold text-foreground">
-                Deterministic agent with personality controls
-              </h1>
+      <div className="flex h-full w-full flex-col overflow-hidden bg-page text-foreground transition-colors">
+        <div className="flex flex-1 min-h-0 flex-col gap-6 px-6 py-6 sm:px-10 sm:py-8 lg:px-16">
+          <Header />
+          <main className="relative flex flex-1 min-h-0 flex-col overflow-hidden rounded-[2rem] border border-chat-border/70 bg-surface shadow-[0px_32px_120px_-60px_rgba(15,23,42,0.28)] dark:shadow-[0px_32px_120px_-60px_rgba(0,0,0,0.6)]">
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <MessageList />
             </div>
-            <ThemeToggle />
-          </header>
-
-          <Card className="relative flex min-h-[65vh] flex-1 flex-col overflow-hidden">
-            <CardHeader className="border-b bg-card/80 backdrop-blur">
-              <CardTitle className="text-lg font-semibold text-foreground">
-                Conversation
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex h-full flex-1 flex-col gap-6 p-0">
-              <div className="flex-1 px-6">
-                <MessageList />
-              </div>
-              <div className="sticky bottom-0 z-10 bg-gradient-to-t from-card via-card to-transparent px-6 pb-6 pt-3">
-                <Composer />
-              </div>
-            </CardContent>
-          </Card>
+            <div className="sticky bottom-0 z-10 space-y-3 border-t border-chat-border/70 bg-surface/95 px-5 pb-5 pt-4 backdrop-blur supports-[backdrop-filter]:bg-surface/85">
+              <Composer />
+              <OptionsPanel />
+            </div>
+          </main>
         </div>
       </div>
     </ThemeProvider>
