@@ -362,10 +362,16 @@ const definitionBuilder: ReplyBuilder = ({ subject, options, transition }) => {
 
 const qaBuilder: ReplyBuilder = ({
   subject,
-  originalInput: _originalInput,
+  originalInput,
   transition,
   options,
 }) => {
+  const trimmedQuestion = originalInput.trim();
+  const questionSource = trimmedQuestion || subject;
+  const question = questionSource.endsWith("?")
+    ? questionSource
+    : `${questionSource}?`;
+
   const extras =
     options.responseLength === "long"
       ? [
@@ -375,7 +381,8 @@ const qaBuilder: ReplyBuilder = ({
       : [];
 
   return [
-    `${transition} ${subject} hinges on aligning expectations, scoping the effort, and sharing results without drama.`,
+    `**Q:** ${question}`,
+    `**A:** ${transition} ${subject} hinges on aligning expectations, scoping the effort, and sharing results without drama.`,
     ...extras,
   ].join("\n\n");
 };
